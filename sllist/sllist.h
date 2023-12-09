@@ -26,5 +26,6 @@ void sllist_insert_start(sllist_t* list, void* data);
 void sllist_insert(sllist_t* list, void* data, size_t index);
 void sllist_remove(sllist_t* list, void* data);
 void sllist_remove_by_index(sllist_t* list, size_t index);
+void* sllist_search(sllist_t* list, size_t index);
 
 #endif //SLLIST_H
