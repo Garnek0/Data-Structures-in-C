@@ -4,7 +4,7 @@ SRC := $(shell find . -name '*.c')
 
 .PHONY: build
 build:
-	gcc $(SRC) -O3 -o main -I.
+	gcc $(SRC) -O3 -o main.out -I.
 
 .PHONY: run
 run: build
