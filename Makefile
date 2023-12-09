@@ -12,4 +12,4 @@ run: build
 
 .PHONY: clean
 clean:
-	rm -rf main
+	rm -rf main.out
