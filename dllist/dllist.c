@@ -1,17 +1,17 @@
-#include "sllist.h"
+#include "dllist.h"
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
 
-sllist_t* sllist_create(){
-    sllist_t* list = malloc(sizeof(sllist_t)); // Allocate the sllist
-    memset(list, 0, sizeof(sllist_t)); // Zero out the sllist structure
-    return list; // Return the sllist pointer
+dllist_t* dllist_create(){
+    dllist_t* list = malloc(sizeof(dllist_t)); // Allocate the dllist
+    memset(list, 0, sizeof(dllist_t)); // Zero out the dllist structure
+    return list; // Return the dllist pointer
 }
 
-void sllist_destroy(sllist_t* list){
-    sllist_node_t* node = list->head;
-    sllist_node_t* nextNode;
+void dllist_destroy(dllist_t* list){
+    dllist_node_t* node = list->head;
+    dllist_node_t* nextNode;
 
     // Destroy each node
     while(node != NULL){
@@ -23,10 +23,11 @@ void sllist_destroy(sllist_t* list){
     free(list);
 }
 
-void sllist_insert_end(sllist_t* list, void* data){
+void dllist_insert_end(dllist_t* list, void* data){
     // Allocate the new node and set it's fields to the correct values
-    sllist_node_t* node = malloc(sizeof(sllist_node_t));
+    dllist_node_t* node = malloc(sizeof(dllist_node_t));
     node->next = NULL;
+	node->prev = list->tail;
     node->data = data;
 
     // If the list has no elements, then the first
@@ -39,13 +40,14 @@ void sllist_insert_end(sllist_t* list, void* data){
     list->nodeCount++; // Increase the node count
 }
 
-void sllist_insert_start(sllist_t* list, void* data){
-    // (Same as sllist_insert_end)
-    sllist_node_t* node = malloc(sizeof(sllist_node_t));
+void dllist_insert_start(dllist_t* list, void* data){
+    // (Same as dllist_insert_end)
+    dllist_node_t* node = malloc(sizeof(dllist_node_t));
     node->data = data;
 	node->next = NULL;
+	node->prev = NULL;
 
-    // (Same as sllist_insert_end)
+    // (Same as dllist_insert_end)
     if(list->nodeCount == 0) list->head = list->tail = node;
     else {
         node->next = list->head; // Set the formet head as the new node's next
@@ -54,33 +56,33 @@ void sllist_insert_start(sllist_t* list, void* data){
     list->nodeCount++; // Increase the node count
 }
 
-void sllist_insert(sllist_t* list, void* data, size_t index){
-    sllist_node_t* node = malloc(sizeof(sllist_node_t));
+void dllist_insert(dllist_t* list, void* data, size_t index){
+    dllist_node_t* node = malloc(sizeof(dllist_node_t));
     node->data = data;
-	node->next = NULL;
+	node->next = node->prev = NULL;
 
     // Index can't be greater than the node count.
     // Print an error and return
     if(index > list->nodeCount) {
-        fprintf(stderr, "sllist: index exceeds linked list size!\n");
+        fprintf(stderr, "dllist: index exceeds linked list size!\n");
         return;
     }
 
     if(list->nodeCount == 0) list->head = list->tail = node; //...
     else { 
         size_t i = 0;
-        sllist_node_t* prev = list->head;
+        dllist_node_t* prev = list->head;
 
         // If the index is the start or the end of the list + 1, then
         // Use these functions for that
         if(index == 0) {
-            return sllist_insert_start(list, data);
+            return dllist_insert_start(list, data);
         } else if(index == list->nodeCount){
-            return sllist_insert_end(list, data);
+            return dllist_insert_end(list, data);
         }
         
         // Insert the element
-        sllist_foreach(list, current){
+        dllist_foreach(list, current){
             if(i == index){
                 prev->next = node; // prev's next is set to the new node 
                 node->next = current; // the new node's next is set to the current node (the node
@@ -96,73 +98,69 @@ void sllist_insert(sllist_t* list, void* data, size_t index){
     return;
 }
 
-static void __sllist_remove_node(sllist_t* list, sllist_node_t* node, sllist_node_t* prev){
+static void __dllist_remove_node(dllist_t* list, dllist_node_t* node){
 	if(list->nodeCount == 1){
-    	// The only element in the list is removed
-    	list->head = list->tail = NULL;
-    } else if(node == list->head){
+        // The only element in the list is removed
+        list->head = list->tail = NULL;
+	} else if(node == list->head){
         // The head of the list is removed
         list->head = node->next;
+		if(node->next) node->next->prev = NULL;
     } else if(node == list->tail){
         // The tail of the list is removed
-        list->tail = prev;
-        prev->next = NULL;
+	    list->tail = node->prev;
+    	node->prev->next = NULL;
     } else {
         // A node in the middle of the list is removed
-        prev->next = node->next;
+        node->prev->next = node->next;
+		node->next->prev = node->prev;
     }
-	free(node); // Free the removed node
+    free(node); // Free the removed node
     list->nodeCount--; // Decrement the node count
     return;
 }
 
-void sllist_remove(sllist_t* list, void* data){
-    sllist_node_t* prev = NULL;
-
-    sllist_foreach(list, current){
+void dllist_remove(dllist_t* list, void* data){
+    dllist_foreach(list, current){
         if(current->data == data){
-			__sllist_remove_node(list, current, prev);
-        }
-        prev = current; // save the previous node
+        	__dllist_remove_node(list, current);
+		}
     }
     // If the foreach loop terminates then the element to be removed wasn't found.
     // Print an error and return
-    fprintf(stderr, "sllist: could not find the node to delete!\n");
+    fprintf(stderr, "dllist: could not find the node to delete!\n");
     return;
 }
 
-void sllist_remove_by_index(sllist_t* list, size_t index){
+void dllist_remove_by_index(dllist_t* list, size_t index){
     // If the index is greater than the greatest index (nodeCound-1) or there are no nodes,
     // Print an error and return
-	if(list->nodeCount == 0 || index > list->nodeCount-1){
-        fprintf(stderr, "sllist: index exceeds linked list size!\n");
+    if(list->nodeCount == 0 || index > list->nodeCount-1){
+        fprintf(stderr, "dllist: index exceeds linked list size!\n");
         return;
     }
 
-    // Find and remove the indexed node
     int i = 0;
-	sllist_node_t* prev = NULL;
 
-    sllist_foreach(list, current){
+	dllist_foreach(list, current){
         if(i == index) {
-			__sllist_remove_node(list, current, prev);
+			__dllist_remove_node(list, current);
 			break;
 		}
 		i++;
-		prev = current;
     }
 }
 
-void* sllist_search(sllist_t* list, size_t index){
-    // (Same as sllist_remove_by_index)
+void* dllist_search(dllist_t* list, size_t index){
+    // (Same as dllist_remove_by_index)
     if(list->nodeCount == 0 || index > list->nodeCount-1){
-        fprintf(stderr, "sllist: index exceeds linked list size!\n");
+        fprintf(stderr, "dllist: index exceeds linked list size!\n");
         return NULL;
     }
 
     // Find the indexed node
     int i = 0;
-    sllist_foreach(list, current){
+    dllist_foreach(list, current){
         if(i == index) return current->data;
         i++;
     }
