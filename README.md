@@ -11,8 +11,3 @@ I decided to do some data structure implementations in C for fun.
 - [ ] Double-Ended Queue (deque)
 - [ ] Hashmap (hashmap)
 - [ ] Binary Tree (bintree)
-- [ ] Binary Search Tree (sbintree)
-- [ ] Full Binary Tree (fbintree)
-- [ ] Complete Binary Tree (cbintree)
-- [ ] Balanced Tree (btree)
-- [ ] Unbalanced Tree (unbtree)
